@@ -1,4 +1,5 @@
 import cv2
+import os
 
 class VideoLoader():
     
@@ -39,7 +40,8 @@ class VideoLoader():
         
         #Store this frame to an image
         frame_path = my_video_name+'_frame_'+str(frame_num)+'.jpg'
-        cv2.imwrite(frame_path,color)
+        if not os.path.exists(frame_path):
+            cv2.imwrite(frame_path,color)
 
         # When everything done, release the capture
         cap.release()

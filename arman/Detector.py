@@ -1,6 +1,9 @@
 import torch
 import pandas
 from VideoLoader import VideoLoader
+from VideoCreator import VideoCreator
+from myUtils import prune
+from Quantizer import KMeansQuantizer
 
 class Detector():
     
@@ -8,8 +11,6 @@ class Detector():
                  model_path, 
                  vid_data_path, 
                  vid_data_ls,
-                 classes,
-                 confidence, 
                  name):
         """
         model_path (str): path to model
@@ -20,11 +21,7 @@ class Detector():
         self.model_path = model_path
         self.vid_data_path = vid_data_path #this might not be an argument but a variable global to proj
         self.vid_data_ls = vid_data_ls
-        self.name = name
-        self.classes = classes
-        self.confidence = confidence
-        self.name = name
-        
+        self.name = name        
         self.model = None
         self.classifer_hash = None #?
         
@@ -35,34 +32,61 @@ class Detector():
         loads model given the path
         """
         self.model = torch.hub.load(self.model_path, self.name)
-        self.model.conf = self.confidence
-        self.model.classes = self.classes
+        bitwidth = 8
+        quantizer = KMeansQuantizer(self.model, 8)
+        #prune(self.model, 0.3)
         
-    def detect(self, timestamp, classes, confidence):
-        self.model.conf = self.confidence
-        self.model.classes = self.classes
+    def detect(self, timestamp, classes, confidence, save_dir):
+        self.model.conf = confidence
+        self.model.classes = classes
         
         vid_loader = VideoLoader(self.vid_data_path, 'myFrame')
         img = vid_loader.getSingleFrame(timestamp)
-        self.getResultFromImg(img)
+        self.getResultFromImg(img, save_dir)
         
-    def getResultFromImg(self, img):
+    def getResultFromImg(self, img, save_dir):
         """
         img: jpg? file
         Returns: xmin, ymin, xmax,ymax,confidence,class, timestamp, classifier hash, Instance_id?
         """
         result = self.model(img)
-        print(type(result))
+        temp = result.pandas().xyxy[0]
+        temp["timestamp"] = [self.count for _ in range(len(temp))]
+        return temp.values.tolist()
+    
+    def getDataFrameFromBatch(self, 
+                            frame_start, 
+                            frame_end, 
+                            frame_jump, 
+                            classes, 
+                            confidence, 
+                            save_dir):
+        all_values = []
         
-        print(result.pandas().xyxy[0])
-        result.show()
-        #check which of return params are missing, add them as needed
-        return
+        for i in range(frame_start, frame_end, frame_jump):
+            res = dtc.detect(i, classes, confidence, save_dir)
+            all_values.extend(res)
+        df_to_ret = pandas.DataFrame(all_values)
+        df_to_ret.columns = ["xmin","ymin","xmax","ymax", "confidence","class","name","timestamp"]
+        return df_to_ret
     
-im = 'https://ultralytics.com/images/zidane.jpg'
+if __name__ == "__main__":
     
-dtc = Detector('ultralytics/yolov5', 'pexels-blue-bird-7189538.mp4', None, [16], 0.1,'yolov5s')
-dtc.detect(10, [16], 0.1)
+    dtc = Detector('ultralytics/yolov5', 'pexels-blue-bird-7189538.mp4', None, 'yolov5s')
+
+    for i in range(0, 600, 12):
+        base = "runs"
+        dtc.detect(i, [0, 16], 0.7, base)
+        
+    print('made it here')
+
+    vc = VideoCreator()
+    vc.mergeFramesIntoVid("runs/detect/", "testVid.avi")
+    
+    #test that detect works
+    #implement a cli command for loading a detector
+    #write a skeleton for paper
+
 
 
     
