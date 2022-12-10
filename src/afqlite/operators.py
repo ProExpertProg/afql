@@ -1,9 +1,10 @@
 from abc import abstractmethod, ABC
+from functools import cache
 from typing import Iterator
 
 from afqlite.cache import Cache
 from afqlite.common import Tuple, TupleDesc, td_add_alias
-from afqlite.detector import Detector
+from afqlite.detector import CachedDetector
 from afqlite.predicates import Predicate
 
 
@@ -18,15 +19,21 @@ class Operator(ABC):
 
 
 class Scan(Operator):
-    def __init__(self, cache: Cache, ):
-        self.cache = cache
+    def __init__(self, c: Cache, table: str):
+        self.cache = c
+        self.table = table
 
     def run(self) -> Iterator[Tuple]:
-        for t in self.cache.TODO():  # TODO get items from cache
-            yield t
+        for t in self.cache.scan_table(self.table):  # TODO get items from cache
+            yield Tuple(self.tupledesc(), t)
 
     def tupledesc(self) -> TupleDesc:
-        pass
+        return {
+            'timestamp': 'int',
+            'xmin': 'float', 'ymin': 'float', 'xmax': 'float', 'ymax': 'float',
+            'confidence': 'float',
+            'class': 'int'
+        }
 
 
 class Join(Operator):
@@ -39,16 +46,17 @@ class Join(Operator):
     def run(self) -> Iterator[Tuple]:
         for t in self.sub_operator1.run():
             for t2 in self.sub_operator2.run():
-                if self.predicate(t, t2):  # TODO join predicate
-                    yield t
+                yield Tuple(self.tupledesc(), (t | t2).values)
 
+    @cache
     def tupledesc(self) -> TupleDesc:
         td1 = td_add_alias(self.alias1, self.sub_operator1.tupledesc())
         td2 = td_add_alias(self.alias2, self.sub_operator2.tupledesc())
         return td1 | td2
 
+
 class Filter(Operator):
-    def __init__(self, sub_operator: Operator, predicate: Predicate): # TODO predicate
+    def __init__(self, predicate: Predicate, sub_operator: Operator):  # TODO predicate
         self.predicate = predicate
         self.sub_operator = sub_operator
 
@@ -62,23 +70,26 @@ class Filter(Operator):
 
 
 class DetectorFilter(Operator):
-    def __init__(self, timestamp_at: int, classes: list[str], confidences: list[float], sub_operator: Operator, detector: Detector):
-        self.confidences = confidences
+    def __init__(self, timestamp_at: int, cls: int, confidence: float, detector: CachedDetector,
+                 sub_operator: Operator):
+        self.confidence = confidence
         self.timestamp_at = timestamp_at
-        self.classes = classes
+        self.cls = cls
         self.sub_operator = sub_operator
         self.detector = detector
 
     def run(self) -> Iterator[Tuple]:
         for t in self.sub_operator.run():
 
-            obj = self.detector.detect(t[self.timestamp_at], self.classes, self.confidences)
+            # check confidence
+            if t[6] >= self.confidence:
+                yield t
 
-            # TODO figure out how to merge results
+            obj = self.detector.detect(t[self.timestamp_at], self.cls)
+
+            # TODO replace bb and confidence columns
             if obj is not None:
                 yield t | obj
 
     def tupledesc(self) -> TupleDesc:
         pass
-
-
