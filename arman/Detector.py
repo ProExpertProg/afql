@@ -2,8 +2,9 @@ import torch
 import pandas
 from VideoLoader import VideoLoader
 from VideoCreator import VideoCreator
-from myUtils import prune
+from myUtils import *
 from Quantizer import KMeansQuantizer
+import torchvision.models as models
 
 class Detector():
     
@@ -32,8 +33,15 @@ class Detector():
         loads model given the path
         """
         self.model = torch.hub.load(self.model_path, self.name)
+        #self.model = torch.load(self.model_path)
+        
+        full_model_size = get_model_size(self.model, 32)
+        print(f"    {32}-bit k-means quantized model has size={full_model_size/MiB:.2f} MiB")
+        
         bitwidth = 8
         quantizer = KMeansQuantizer(self.model, 8)
+        quantized_model_size = get_model_size(self.model, bitwidth)
+        print(f"    {bitwidth}-bit k-means quantized model has size={quantized_model_size/MiB:.2f} MiB")
         #prune(self.model, 0.3)
         
     def detect(self, timestamp, classes, confidence, save_dir):
@@ -42,16 +50,17 @@ class Detector():
         
         vid_loader = VideoLoader(self.vid_data_path, 'myFrame')
         img = vid_loader.getSingleFrame(timestamp)
-        self.getResultFromImg(img, save_dir)
+        return self.getResultFromImg(img, save_dir, timestamp)
         
-    def getResultFromImg(self, img, save_dir):
+    def getResultFromImg(self, img, save_dir, timestamp):
         """
         img: jpg? file
         Returns: xmin, ymin, xmax,ymax,confidence,class, timestamp, classifier hash, Instance_id?
         """
         result = self.model(img)
+        result.show()
         temp = result.pandas().xyxy[0]
-        temp["timestamp"] = [self.count for _ in range(len(temp))]
+        temp["timestamp"] = [timestamp for _ in range(len(temp))]
         return temp.values.tolist()
     
     def getDataFrameFromBatch(self, 
@@ -72,16 +81,17 @@ class Detector():
     
 if __name__ == "__main__":
     
+    #dtc = Detector('ultralytics/yolov5', 'pexels-blue-bird-7189538.mp4', None, 'yolov5s')
     dtc = Detector('ultralytics/yolov5', 'pexels-blue-bird-7189538.mp4', None, 'yolov5s')
 
-    for i in range(0, 600, 12):
+    for i in range(0, 36, 12):
         base = "runs"
         dtc.detect(i, [0, 16], 0.7, base)
         
     print('made it here')
 
-    vc = VideoCreator()
-    vc.mergeFramesIntoVid("runs/detect/", "testVid.avi")
+    # vc = VideoCreator()
+    # vc.mergeFramesIntoVid("runs/detect/", "testVid.avi")
     
     #test that detect works
     #implement a cli command for loading a detector
