@@ -1,4 +1,3 @@
-# TODO
 import os.path
 
 import yaml
@@ -12,6 +11,7 @@ CLASS_TO_INDEX = {
     INDEX_TO_CLASS[i]: i for i in INDEX_TO_CLASS
 }
 
+# TODO move this
 INDEX_TO_COLUMN = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class', 'timestamp', 'classifier']
 NUM_COLUMNS = len(INDEX_TO_COLUMN)
 

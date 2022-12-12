@@ -89,11 +89,11 @@ class AFQLite:
         else:
             self.import_cache_from_file(dataset, BUILTIN_LIGHT, cache_path)
 
-    def add_detector(self, name: str, model_path: str):
+    def add_detector(self, name: str, model_path: str, model_hash: str = None):
         if name in self.detectors:
             raise DetectorAlreadyExists
 
-        self.detectors[name] = Detector(model_path, name)
+        self.detectors[name] = Detector(model_path, name) # TODO , model_hash)
 
         # create a new cache for each existing dataset
         for dataset in self.datasets:

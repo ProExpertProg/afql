@@ -31,11 +31,13 @@ if __name__ == '__main__':
                 if not found:
                     print("Unknown command \"%s\". Available commands:" % (argv[0]))
                     commands['help'].run(afql)
+                continue
+
+            # handle query
+            # TODO
 
         except KeyboardInterrupt:
             print("Ope! try again")
         except EOFError:
             print("Good day")
             break
-
-        statement_buffer = None

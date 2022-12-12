@@ -59,7 +59,7 @@ class Join(Operator):
 
 
 class Filter(Operator):
-    def __init__(self, predicate: Predicate, sub_operator: Operator):  # TODO predicate
+    def __init__(self, predicate: Predicate, sub_operator: Operator):
         self.predicate = predicate
         self.sub_operator = sub_operator
 
