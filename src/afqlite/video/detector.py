@@ -1,9 +1,8 @@
 import torch
 import pandas
-from loader import VideoLoader
-from creator import VideoCreator
-from utils import *
-from quantizer import KMeansQuantizer
+from afqlite.video.loader import VideoLoader
+from afqlite.video.utils import *
+from afqlite.video.quantizer import KMeansQuantizer
 import torchvision.models as models
 
 # xmin, ymin, xmax, ymax, confidence, class, timestamp, classifier hash

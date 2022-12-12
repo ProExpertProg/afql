@@ -20,22 +20,23 @@ class Operator(ABC):
 
 
 class Scan(Operator):
-    def __init__(self, c: Cache, table: str):
-        self.cache = c
+    def __init__(self, low_precision: Cache, high_precision: Cache, table: str):
+        self.low_precision = low_precision
+        self.high_precision = high_precision
         self.table = table
 
     def run(self) -> Iterator[Tuple]:
-        for t in self.cache.scan():
+        for t in self.low_precision.scan(self.high_precision):
             yield Tuple(self.tupledesc(), t)
 
     def tupledesc(self) -> TupleDesc:
-        return {
-            'xmin': 'float', 'ymin': 'float', 'xmax': 'float', 'ymax': 'float',
-            'confidence': 'float',
-            'class': 'int',
-            'timestamp': 'int',
-            'classifier': 'str'
-        }
+        return [
+            ('xmin', 'float'), ('ymin', 'float'), ('xmax', 'float'), ('ymax', 'float'),
+            ('confidence', 'float'),
+            ('class', 'int'),
+            ('timestamp', 'int'),
+            ('classifier', 'str')
+        ]
 
 
 class Join(Operator):
@@ -48,13 +49,13 @@ class Join(Operator):
     def run(self) -> Iterator[Tuple]:
         for t in self.sub_operator1.run():
             for t2 in self.sub_operator2.run():
-                yield Tuple(self.tupledesc(), (t | t2).values)
+                yield Tuple(self.tupledesc(), (t + t2).values)
 
     @cache
     def tupledesc(self) -> TupleDesc:
         td1 = td_add_alias(self.alias1, self.sub_operator1.tupledesc())
         td2 = td_add_alias(self.alias2, self.sub_operator2.tupledesc())
-        return td1 | td2
+        return td1 + td2
 
 
 class Filter(Operator):
@@ -111,7 +112,8 @@ class DetectorFilter(Operator):
 
             tuples.append(t)
 
-        yield tuples
+        if len(tuples) > 0:
+            yield tuples
 
     def match_and_replace(self, tuples: list[Tuple], detections: list[DetectionTuple]) -> Sequence[Tuple]:
         """
@@ -122,4 +124,6 @@ class DetectorFilter(Operator):
         :return:
         """
         # TODO
+        if len(detections) == 0:
+            return []
         return tuples

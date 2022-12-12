@@ -2,6 +2,7 @@ from typing import Iterator, Union
 
 from afqlite.video.detector import DetectionTuple
 
+# class, timestamp
 Key = tuple[int, int]
 
 
@@ -9,9 +10,16 @@ class Cache:
     def __init__(self):
         self.detections: dict[Key, list[DetectionTuple]] = {}
 
-    def scan(self) -> Iterator[DetectionTuple]:
-        for detections in self.detections.values():
-            yield from detections
+    def scan(self, other: 'Cache' = None) -> Iterator[DetectionTuple]:
+        """
+        scan will generate all DetectionTuples.
+        If other has tuples for the same key, those will be used instead.
+        """
+        for key in self.detections:
+            if other is not None and key in other.detections:
+                yield from other.detections[key]
+            else:
+                yield self.detections[key]
 
     # TODO:
     #  - implement scan
@@ -34,7 +42,7 @@ class Cache:
         :return:
         """
         # overwrite any existing detections
-        self.detections[timestamp, cls] = [] if detections is None else detections
+        self.detections[(cls, timestamp)] = [] if detections is None else detections
 
     def find(self, timestamp: int, cls: int) -> tuple[list[DetectionTuple], bool]:
         """
@@ -45,7 +53,7 @@ class Cache:
           exists indicates whether this was a cache hit (True) or miss (False).
           If True, detections can be empty if there weren't any detections for this class and timestamp.
         """
-        key = (timestamp, cls)
+        key = (cls, timestamp)
         if key in self.detections:
             return self.detections[key], True
 

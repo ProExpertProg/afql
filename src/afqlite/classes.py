@@ -12,7 +12,7 @@ CLASS_TO_INDEX = {
     INDEX_TO_CLASS[i]: i for i in INDEX_TO_CLASS
 }
 
-INDEX_TO_COLUMN = ['timestamp', 'xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class']
+INDEX_TO_COLUMN = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class', 'timestamp', 'classifier']
 NUM_COLUMNS = len(INDEX_TO_COLUMN)
 
 COLUMN_TO_INDEX = {

@@ -1,11 +1,11 @@
 from typing import Sequence
 
-TupleDesc = dict[str, str]
+TupleDesc = list[tuple[str, str]]
 
 
 def td_add_alias(alias: str, td: TupleDesc) -> TupleDesc:
     return td if alias is None else \
-        {"%s.%s" % (alias, k): v for k, v in td}
+    [("%s.%s" % (alias, name), t) for name, t in td]
 
 
 class Tuple:
@@ -16,8 +16,8 @@ class Tuple:
         self.values = list(values)
         self.tupledesc = tupledesc
 
-    def __or__(self, other: 'Tuple') -> 'Tuple':
-        td = self.tupledesc | other.tupledesc
+    def __add__(self, other: 'Tuple') -> 'Tuple':
+        td = self.tupledesc + other.tupledesc
         return Tuple(td, self.values + other.values)
 
     def __getitem__(self, item):

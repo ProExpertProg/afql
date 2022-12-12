@@ -27,12 +27,12 @@ class BinaryPredicate(Predicate, ABC):
 
 class Or(BinaryPredicate):
     def __call__(self, *args, **kwargs):
-        return self.left(args, kwargs) or self.right(args, kwargs)
+        return self.left(*args, **kwargs) or self.right(*args, **kwargs)
 
 
 class And(BinaryPredicate):
     def __call__(self, *args, **kwargs):
-        return self.left(args, kwargs) and self.right(args, kwargs)
+        return self.left(*args, **kwargs) and self.right(*args, **kwargs)
 
 
 class Compare(Predicate):
@@ -52,7 +52,7 @@ class Compare(Predicate):
         self.op = op
 
     def __call__(self, *args, **kwargs):
-        return self.OPS[self.op](self.arg1(*args), self.arg2(*args))
+        return self.OPS[self.op](self.arg1(*args, **kwargs), self.arg2(*args, **kwargs))
 
 
 class Column(Value):
