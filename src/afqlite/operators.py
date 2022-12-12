@@ -1,11 +1,12 @@
 from abc import abstractmethod, ABC
 from functools import cache
-from typing import Iterator
+from typing import Iterator, Sequence
 
 from afqlite.cache import Cache
 from afqlite.common import Tuple, TupleDesc, td_add_alias
 from afqlite.detector import CachedDetector
 from afqlite.predicates import Predicate
+from afqlite.video.detector import DetectionTuple
 
 
 class Operator(ABC):
@@ -70,26 +71,55 @@ class Filter(Operator):
 
 
 class DetectorFilter(Operator):
-    def __init__(self, timestamp_at: int, cls: int, confidence: float, detector: CachedDetector,
+    def __init__(self, timestamp_at: int, confidence_at, cls: int, confidence: float, detector: CachedDetector,
                  sub_operator: Operator):
         self.confidence = confidence
         self.timestamp_at = timestamp_at
+        self.confidence_at = confidence_at
         self.cls = cls
         self.sub_operator = sub_operator
         self.detector = detector
 
     def run(self) -> Iterator[Tuple]:
-        for t in self.sub_operator.run():
+        for tuples in self.group_by_timestamp():
 
-            # check confidence
-            if t[6] >= self.confidence:
-                yield t
+            # check all the timestamps are the same
+            timestamp = tuples[0][self.timestamp_at]
+            assert all(t[self.timestamp_at] == timestamp for t in tuples)
 
-            obj = self.detector.detect(t[self.timestamp_at], self.cls)
+            # if confidence is good enough on all of them, return existing tuples
+            if min(t[self.confidence_at] for t in tuples) >= self.confidence:
+                yield from tuples
+                continue
 
-            # TODO replace bb and confidence columns
-            if obj is not None:
-                yield t | obj
+            # run detector and replace bb columns in tuples
+            detections = self.detector.detect(timestamp, self.cls)
+            yield from self.match_and_replace(tuples, detections)
 
     def tupledesc(self) -> TupleDesc:
         pass
+
+    def group_by_timestamp(self) -> Iterator[list[Tuple]]:
+        last_timestamp, tuples = None, []
+        for t in self.sub_operator.run():
+            timestamp = t[self.timestamp_at]
+            if timestamp != last_timestamp and len(tuples) != 0:
+                yield tuples
+                tuples = []
+                last_timestamp = timestamp
+
+            tuples.append(t)
+
+        yield tuples
+
+
+    def match_and_replace(self, tuples: list[Tuple], detections: list[DetectionTuple]) -> Sequence[Tuple]:
+        """
+        match_and_replace will match the given tuples with fresh detections and return updated tuples.
+
+        :param tuples:
+        :param detections:
+        :return:
+        """
+        # TODO
+        return tuples

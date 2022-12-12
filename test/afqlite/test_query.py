@@ -29,8 +29,8 @@ class TestQueries(unittest.TestCase):
             (5, 717.180054, 901.000000, 1391.186646, 2421.005859, 0.841077, 0)
         ]
 
-
         self.mock_cache.scan_table = Mock(return_value=iter(self.data))
+
         def detect(timestamp, ):
             pass
 
@@ -45,28 +45,29 @@ class TestQueries(unittest.TestCase):
 
 
 def test_query1(self):
-    query = DetectorFilter(0, CLASS_TO_INDEX['dog'], 0.9, self.mock_detector,
-                           Filter(Compare("==", Column(COLUMN_TO_INDEX['class']), Constant(CLASS_TO_INDEX['dog'])),
-                                  Scan(self.mock_cache, "dog_video")))
+    query = DetectorFilter(0, 6, CLASS_TO_INDEX['dog'], 0.9, self.mock_detector, Filter(
+        Compare("==", Column(COLUMN_TO_INDEX['class']), Constant(CLASS_TO_INDEX['dog'])),
+        Scan(self.mock_cache, "dog_video")))
 
     results = list(query.run())
     self.assertEqual(len(results), len(self.data) / 2)
 
 
 def test_query2(self):
-    query = DetectorFilter(0, [CLASS_TO_INDEX['dog'], CLASS_TO_INDEX['person']], [0.9, 0.9], self.mock_detector,
-                           Filter(And(Compare("<", Column(COLUMN_TO_INDEX['xmax']),
-                                              Column(COLUMN_TO_INDEX['xmin'] + NUM_COLUMNS)),
-                                      Compare("==", Column(COLUMN_TO_INDEX['timestamp']),
-                                              Column(COLUMN_TO_INDEX['timestamp'] + NUM_COLUMNS)),
-                                      ),
-                                  Join("dogs", "people",
-                                       Filter(Compare("==", Column(3), Constant(CLASS_TO_INDEX['dog'])),
-                                              Scan(self.mock_cache, "dog_video")),
-                                       Filter(Compare("==", Column(3), Constant(CLASS_TO_INDEX['person'])),
-                                              Scan(self.mock_cache, "dog_video"))
-                                       )
-                                  )
+    query = DetectorFilter(0, 6, [CLASS_TO_INDEX['dog'], CLASS_TO_INDEX['person']], [0.9, 0.9], self.mock_detector,
+                           Filter(
+                               And(Compare("<", Column(COLUMN_TO_INDEX['xmax']),
+                                           Column(COLUMN_TO_INDEX['xmin'] + NUM_COLUMNS)),
+                                   Compare("==", Column(COLUMN_TO_INDEX['timestamp']),
+                                           Column(COLUMN_TO_INDEX['timestamp'] + NUM_COLUMNS)),
+                                   ),
+                               Join("dogs", "people",
+                                    Filter(Compare("==", Column(3), Constant(CLASS_TO_INDEX['dog'])),
+                                           Scan(self.mock_cache, "dog_video")),
+                                    Filter(Compare("==", Column(3), Constant(CLASS_TO_INDEX['person'])),
+                                           Scan(self.mock_cache, "dog_video"))
+                                    )
+                           )
                            )
 
     results = list(query.run())

@@ -6,7 +6,10 @@ from utils import *
 from quantizer import KMeansQuantizer
 import torchvision.models as models
 
-class Detector():
+# xmin, ymin, xmax, ymax, confidence, class, timestamp, classifier hash
+DetectionTuple = tuple[float, float, float, float, float, int, int, str]
+
+class Detector:
     
     def __init__(self, 
                  model_path, 

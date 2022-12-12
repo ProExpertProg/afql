@@ -2,13 +2,12 @@ from abc import abstractmethod, ABC
 from typing import Iterator, Union
 
 from afqlite.common import Tuple
+from afqlite.video.detector import DetectionTuple
 
-CachedTuple = tuple[int, float, float, float, float, float, int]
-# TODO maybe store hash of detector?
 
 class Cache(ABC):
     @abstractmethod
-    def scan_table(self, table: str) -> Iterator[CachedTuple]:
+    def scan_table(self, table: str) -> Iterator[DetectionTuple]:
         pass
 
     # TODO:
@@ -21,4 +20,27 @@ class Cache(ABC):
     #  - implement load/construct from file
     #  - implement store/write to file
     #  - static registry of caches and detectors
+    def store(self, timestamp: int, cls: int, detections: list[DetectionTuple] = None):
+        """
+        store will save the given detections for the given timestamp and class
+        :param timestamp: video timestamp
+        :param cls: object class
+        :param detections: if None, the cache will remember that there aren't any detections for this timestamp and class.
+        :return:
+        """
+        pass
 
+    """
+    find
+    """
+
+    def find(self, timestamp: int, cls: int) -> tuple[list[DetectionTuple], bool]:
+        """
+        find will return a list of detection tuples
+        :param timestamp:
+        :param cls:
+        :return: (detections, exists)
+          exists indicates whether this was a cache hit (True) or miss (False).
+          If True, detections can be empty if there weren't any detections for this class and timestamp.
+        """
+        pass
