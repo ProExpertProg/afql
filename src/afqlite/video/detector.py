@@ -1,9 +1,9 @@
 import torch
 import pandas
-from VideoLoader import VideoLoader
-from VideoCreator import VideoCreator
-from myUtils import *
-from Quantizer import KMeansQuantizer
+from loader import VideoLoader
+from creator import VideoCreator
+from utils import *
+from quantizer import KMeansQuantizer
 import torchvision.models as models
 
 class Detector():
@@ -44,15 +44,15 @@ class Detector():
         print(f"    {bitwidth}-bit k-means quantized model has size={quantized_model_size/MiB:.2f} MiB")
         #prune(self.model, 0.3)
         
-    def detect(self, timestamp, classes, confidence, save_dir):
+    def detect(self, timestamp, classes, confidence):
         self.model.conf = confidence
         self.model.classes = classes
         
         vid_loader = VideoLoader(self.vid_data_path, 'myFrame')
         img = vid_loader.getSingleFrame(timestamp)
-        return self.getResultFromImg(img, save_dir, timestamp)
+        return self.getResultFromImg(img, timestamp)
         
-    def getResultFromImg(self, img, save_dir, timestamp):
+    def getResultFromImg(self, img, timestamp):
         """
         img: jpg? file
         Returns: xmin, ymin, xmax,ymax,confidence,class, timestamp, classifier hash, Instance_id?
@@ -63,17 +63,16 @@ class Detector():
         temp["timestamp"] = [timestamp for _ in range(len(temp))]
         return temp.values.tolist()
     
-    def getDataFrameFromBatch(self, 
-                            frame_start, 
-                            frame_end, 
-                            frame_jump, 
-                            classes, 
-                            confidence, 
-                            save_dir):
+    def getDataFrameFromBatch(self,
+                              frame_start,
+                              frame_end,
+                              frame_jump,
+                              classes,
+                              confidence):
         all_values = []
         
         for i in range(frame_start, frame_end, frame_jump):
-            res = dtc.detect(i, classes, confidence, save_dir)
+            res = self.detect(i, classes, confidence)
             all_values.extend(res)
         df_to_ret = pandas.DataFrame(all_values)
         df_to_ret.columns = ["xmin","ymin","xmax","ymax", "confidence","class","name","timestamp"]
@@ -86,7 +85,7 @@ if __name__ == "__main__":
 
     for i in range(0, 36, 12):
         base = "runs"
-        dtc.detect(i, [0, 16], 0.7, base)
+        dtc.detect(i, [0, 16], 0.7)
         
     print('made it here')
 

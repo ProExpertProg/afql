@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from myUtils import sparsity
+from utils import sparsity
 from collections import namedtuple
 
 Codebook = namedtuple('Codebook', ['centroids', 'labels'])
