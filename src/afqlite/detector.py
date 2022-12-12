@@ -11,12 +11,16 @@ class CachedDetector:
         self.detector = detector
         self.classes = set(classes)
 
-    # Should also store any detections it makes in the cache
-    # and look up the results in a cache
     def detect(self, timestamp: int, cls: int) -> list[DetectionTuple]:
-        detections, exists = self.cache.find(timestamp, cls)
-        if exists:
-            # cached could be None (means the detector ran and returned no result)
+        """
+        detect finds all detections for the given timestamp and class.
+        It looks them up in the cache and otherwise runs the detector on the appropriate frame,
+        storing all detections returned for all classes.
+        """
+
+        detections, found = self.cache.find(timestamp, cls)
+        if found:
+            # detections could be empty (means the detector ran and returned no result)
             # or a proper list of tuples
             return detections
 

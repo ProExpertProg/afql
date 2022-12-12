@@ -25,15 +25,16 @@ class Scan(Operator):
         self.table = table
 
     def run(self) -> Iterator[Tuple]:
-        for t in self.cache.scan_table(self.table):  # TODO get items from cache
+        for t in self.cache.scan():
             yield Tuple(self.tupledesc(), t)
 
     def tupledesc(self) -> TupleDesc:
         return {
-            'timestamp': 'int',
             'xmin': 'float', 'ymin': 'float', 'xmax': 'float', 'ymax': 'float',
             'confidence': 'float',
-            'class': 'int'
+            'class': 'int',
+            'timestamp': 'int',
+            'classifier': 'str'
         }
 
 
@@ -111,7 +112,6 @@ class DetectorFilter(Operator):
             tuples.append(t)
 
         yield tuples
-
 
     def match_and_replace(self, tuples: list[Tuple], detections: list[DetectionTuple]) -> Sequence[Tuple]:
         """
