@@ -4,11 +4,12 @@ from afqlite.video.detector import DetectionTuple
 
 # class, timestamp
 Key = tuple[int, int]
+DetectionStore = dict[Key, list[DetectionTuple]]
 
 
 class Cache:
-    def __init__(self):
-        self.detections: dict[Key, list[DetectionTuple]] = {}
+    def __init__(self, detections=None):
+        self.detections: DetectionStore = {} if detections is None else detections
 
     def scan(self, other: 'Cache' = None) -> Iterator[DetectionTuple]:
         """
@@ -21,18 +22,6 @@ class Cache:
             else:
                 yield self.detections[key]
 
-    # TODO:
-    #  - implement scan
-    #  - find: query tuple given class, timestamp
-    #   - each detector will get its own cache object
-    #  -
-    #  - implement replace for built-in high-precision to replace the preprocessed tuples
-    #    - maybe subclass of cache
-    #    - reuse replacement from DetectorFilter
-    #  - implement load/construct from file
-    #    - merging not allowed
-    #  - implement store/write to file
-    #  - static registry of caches and detectors
     def store(self, timestamp: int, cls: int, detections: list[DetectionTuple] = None):
         """
         store will save the given detections for the given timestamp and class
@@ -59,3 +48,9 @@ class Cache:
 
         # cache miss
         return [], False
+
+    def merge(self, cached_data: DetectionStore):
+        """
+        Items in cached_data take precedence over existing items (any data that already exists will be replaced).
+        """
+        self.detections |= cached_data

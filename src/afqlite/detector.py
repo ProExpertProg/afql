@@ -5,10 +5,11 @@ from afqlite.video.detector import Detector, DetectionTuple
 
 
 class CachedDetector:
-    def __init__(self, cache: Cache, detector: Detector, classes: Sequence[int], confidence):
-        self.confidence = confidence
+    def __init__(self, cache: Cache, detector: Detector, classes: Sequence[int], confidence, video_path: str):
         self.cache = cache
         self.detector = detector
+        self.confidence = confidence
+        self.video_path = video_path
         self.classes = set(classes)
 
     def detect(self, timestamp: int, cls: int) -> list[DetectionTuple]:
@@ -24,7 +25,7 @@ class CachedDetector:
             # or a proper list of tuples
             return detections
 
-        raw_detections = self.detector.detect(timestamp, self.classes, self.confidence)
+        raw_detections = self.detector.detect(timestamp, self.classes, self.confidence, self.video_path)
         detections_by_class = self.partition_by_class(raw_detections)
 
         # store all detections in the cache
