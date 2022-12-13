@@ -59,11 +59,8 @@ class Detector:
         temp = temp.drop(columns=['name'])  # name is redundant with class integer
         temp["timestamp"] = [timestamp for _ in range(len(temp))]  # concat timestamp
         temp["classifier"] = self.name  # concat classifier
-        dtc_ls = []
 
-        for elt in temp.values.tolist():
-            dtc_ls.append(DetectionTuple(elt))
-        return dtc_ls  # return as a Python list
+        return [DetectionTuple(elt) for elt in temp.values.tolist()]
 
     def getDataFrameFromBatch(self,
                               frame_start,
