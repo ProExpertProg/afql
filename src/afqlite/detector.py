@@ -12,6 +12,7 @@ class CachedDetector:
         self.confidence = confidence
         self.video_loader = video_loader
         self.classes = set(classes)
+        self.classes_list = list(classes)
 
     def detect(self, timestamp: int, cls: int) -> list[DetectionTuple]:
         """
@@ -26,7 +27,7 @@ class CachedDetector:
             # or a proper list of tuples
             return detections
 
-        raw_detections = self.detector.detect(timestamp, self.classes, self.confidence, self.video_loader)
+        raw_detections = self.detector.detect(timestamp, self.classes_list, self.confidence, self.video_loader)
         detections_by_class = self.partition_by_class(raw_detections)
 
         # store all detections in the cache
@@ -35,7 +36,7 @@ class CachedDetector:
             detections_for_c = detections_by_class.get(c)
             self.cache.store(timestamp, c, detections_for_c)
             if c == cls:
-                detections = detections_for_c
+                detections = [] if detections_for_c is None else detections_for_c
 
         return detections
 
@@ -44,7 +45,7 @@ class CachedDetector:
         detections: dict[int, list[DetectionTuple]] = {}
         for raw in raw_detections:
             raw_cls = raw[COLUMN_TO_INDEX['class']]
-            detections[raw_cls] = detections.get(raw_cls, default=[]) + [raw]
+            detections[raw_cls] = detections.get(raw_cls, []) + [raw]
 
         # only detected classes that were given
         assert all(c in self.classes for c in detections)
