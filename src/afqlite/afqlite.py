@@ -77,6 +77,8 @@ class AFQLite:
 
         self.datasets[dataset] = video_path
 
+        # TODO create VideoLoader
+
         # create a new cache for each existing detector
         for detector in self.detectors:
             cache_key = (dataset, detector)
