@@ -32,8 +32,9 @@ class Detector:
         """
         loads model given the path
         """
-        self.model = torch.hub.load(self.model_path, self.name)
-        # self.model = torch.load(self.model_path)
+        #self.model = torch.hub.load(self.model_path, self.name) 
+        self.model = torch.hub.load("yolov5-master", 'custom', path=self.model_path, source='local')
+        #self.model = torch.load(self.model_path)
 
     def detect(self, timestamp, classes, confidence, video_loader: VideoLoader):
         self.model.conf = confidence
@@ -77,15 +78,14 @@ class Detector:
 
 
 if __name__ == "__main__":
-    #dtc = Detector('ultralytics/yolov5', 'pexels-blue-bird-7189538.mp4', None, 'yolov5s')
-    dtc = Detector('ultralytics/yolov5', 'yolov5s')
+    # dtc = Detector('ultralytics/yolov5', 'yolov5s')
+    dtc = Detector('yolov5s.pt', 'yolov5s')
 
     video_loader = VideoLoader('pexels-blue-bird-7189538.mp4')
     for i in range(0, 36, 12):
         base = "runs"
         ans = dtc.detect(i, [0, 16], 0.7, video_loader)
         print(ans)
-
     print('made it here')
 
     # # vc = VideoCreator()
