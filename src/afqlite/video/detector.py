@@ -7,7 +7,7 @@ from loader import VideoLoader
 import torchvision.models as models
 
 # xmin, ymin, xmax, ymax, confidence, class, timestamp, classifier_hash
-DetectionTuple = tuple[float, float, float, float, float, int, int, str]
+#DetectionTuple = tuple[float, float, float, float, float, int, int, str]
 
 
 class Detector:
@@ -53,7 +53,11 @@ class Detector:
         temp = temp.drop(columns=['name'])  # name is redundant with class integer
         temp["timestamp"] = [timestamp for _ in range(len(temp))]  # concat timestamp
         temp["classifier"] = self.name  # concat classifier
-        return DetectionTuple(temp.values.tolist())  # return as a Python list
+        dtc_ls = []
+        
+        for elt in temp.values.tolist():
+            dtc_ls.append(DetectionTuple(elt))
+        return dtc_ls  # return as a Python list
 
     def getDataFrameFromBatch(self,
                               frame_start,
@@ -73,20 +77,21 @@ class Detector:
 
 
 if __name__ == "__main__":
-    # #dtc = Detector('ultralytics/yolov5', 'pexels-blue-bird-7189538.mp4', None, 'yolov5s')
-    # dtc = Detector('ultralytics/yolov5', 'yolov5s')
+    #dtc = Detector('ultralytics/yolov5', 'pexels-blue-bird-7189538.mp4', None, 'yolov5s')
+    dtc = Detector('ultralytics/yolov5', 'yolov5s')
 
-    # for i in range(0, 36, 12):
-    #     base = "runs"
-    #     ans = dtc.detect(i, [0, 16], 0.7, 'pexels-blue-bird-7189538.mp4')
-    #     print(type(ans))
+    video_loader = VideoLoader('pexels-blue-bird-7189538.mp4')
+    for i in range(0, 36, 12):
+        base = "runs"
+        ans = dtc.detect(i, [0, 16], 0.7, video_loader)
+        print(ans)
 
-    # print('made it here')
+    print('made it here')
 
     # # vc = VideoCreator()
     # # vc.mergeFramesIntoVid("runs/detect/", "testVid.avi")
-    df = pandas.read_pickle("testy_test.pkl")
-    print(df.head())
+    # df = pandas.read_pickle("testy_test.pkl")
+    # print(df.head())
 
     # test that detect works
     # implement a cli command for loading a detector
