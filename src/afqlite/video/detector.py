@@ -7,7 +7,7 @@ from loader import VideoLoader
 import torchvision.models as models
 
 # xmin, ymin, xmax, ymax, confidence, class, timestamp, classifier_hash
-DetectionTuple = tuple[float, float, float, float, float, int, int, str] #<- confused by this line
+#DetectionTuple = tuple[float, float, float, float, float, int, int, str] #<- confused by this line
 # from typing import NewType
 # DetectionTuple = NewType('DetectionTuple', [float, float, float, float, float, int, int, str])
 
@@ -76,18 +76,20 @@ class Detector:
     
 if __name__ == "__main__":
     
-    #dtc = Detector('ultralytics/yolov5', 'pexels-blue-bird-7189538.mp4', None, 'yolov5s')
-    dtc = Detector('ultralytics/yolov5', 'yolov5s')
+    # #dtc = Detector('ultralytics/yolov5', 'pexels-blue-bird-7189538.mp4', None, 'yolov5s')
+    # dtc = Detector('ultralytics/yolov5', 'yolov5s')
 
-    for i in range(0, 36, 12):
-        base = "runs"
-        ans = dtc.detect(i, [0, 16], 0.7, 'pexels-blue-bird-7189538.mp4')
-        print(type(ans))
+    # for i in range(0, 36, 12):
+    #     base = "runs"
+    #     ans = dtc.detect(i, [0, 16], 0.7, 'pexels-blue-bird-7189538.mp4')
+    #     print(type(ans))
         
-    print('made it here')
+    # print('made it here')
 
-    # vc = VideoCreator()
-    # vc.mergeFramesIntoVid("runs/detect/", "testVid.avi")
+    # # vc = VideoCreator()
+    # # vc.mergeFramesIntoVid("runs/detect/", "testVid.avi")
+    df = pandas.read_pickle("testy_test.pkl")
+    print(df.head())
     
     #test that detect works
     #implement a cli command for loading a detector

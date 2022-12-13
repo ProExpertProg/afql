@@ -14,7 +14,7 @@ class VideoLoader():
         self.frame_write_path = frame_write_path
         
         
-    def getSingleFrame(self, frame_num, write_to_disk):
+    def getSingleFrame(self, frame_num, write_to_disk=False):
         """Returns a numpy array representing the frame in a video
         specified by frame_num.
 
