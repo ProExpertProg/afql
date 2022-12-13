@@ -1,5 +1,6 @@
 import os
-import tempfile, filecmp
+import tempfile
+from pathlib import Path
 from unittest import TestCase
 
 from afqlite.afqlite import *
@@ -8,9 +9,13 @@ from afqlite.afqlite import *
 class TestAFQLite(TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.afql = AFQLite()
-        self.cache_path = "../../zebra/zebra_tuples.csv"
-        self.video_path = "../../zebra/zebra_giraffe_human.mp4"
+
+        self.cache_path = str(Path(__file__).parent / "../../zebra/zebra_tuples.csv")
+        self.video_path = str(Path(__file__).parent / "../../zebra/zebra_giraffe_human.mp4")
+
+        # don't want to initialize the detectors
+        # noinspection PyTypeChecker
+        self.afql = AFQLite(False, False)
 
     def test_cache_exceptions(self):
         afql = self.afql

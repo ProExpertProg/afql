@@ -4,7 +4,8 @@ import pickle
 from typing import Union
 
 from afqlite.cache import Cache, DetectionStore
-from afqlite.video.detector import Detector, DetectionTuple, DETECTION_TUPLE_LEN, INDEX_TO_COLUMN
+from afqlite.video.detector import Detector, DetectionTuple, DETECTION_TUPLE_LEN, INDEX_TO_COLUMN, get_heavyweight, \
+    get_lightweight
 from afqlite.video.loader import VideoLoader
 
 BUILTIN_LIGHT = "__builtin_lightweight__"
@@ -36,21 +37,24 @@ class InvalidDataError(Exception):
 
 
 class AFQLite:
-    def __init__(self):
+    def __init__(self, heavyweight: Detector = None, lightweight: Detector = None):
+        if heavyweight is None:
+            heavyweight = get_heavyweight(BUILTIN_HEAVY)
+
+        if lightweight is None:
+            lightweight = get_lightweight(BUILTIN_LIGHT)
+
         # keyed by name, contains video loader
         self.datasets: dict[str, VideoLoader] = {}
 
         # keyed by detector name
         self.detectors: dict[str, Detector] = {
-            # TODO
-            BUILTIN_LIGHT: None,
-            BUILTIN_HEAVY: Detector("ultralytics/yolov5", BUILTIN_HEAVY),
+            BUILTIN_LIGHT: lightweight,
+            BUILTIN_HEAVY: heavyweight,
         }
 
         # keyed by dataset and detector hash
         self.caches: dict[tuple[str, str], Cache] = {}
-
-        print("AFQLite initialized")
 
     def import_cache(self, dataset: str, detector: str, cached_data: Union[DetectionStore, list[DetectionTuple]]):
         # cached_data will replace existing data for any overlapping keys

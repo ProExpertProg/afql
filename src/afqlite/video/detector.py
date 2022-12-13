@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 import pandas
 from afqlite.video.loader import VideoLoader
@@ -14,6 +16,14 @@ NUM_COLUMNS = len(INDEX_TO_COLUMN)
 COLUMN_TO_INDEX = {
     column: i for i, column in enumerate(INDEX_TO_COLUMN)
 }
+
+_PARENT_DIR = Path(__file__).parent
+def get_heavyweight(name: str) -> 'Detector':
+    return Detector(str(_PARENT_DIR / "yolov5s.pt"), name)
+
+def get_lightweight(name: str) -> 'Detector':
+    # TODO
+    return Detector(str(_PARENT_DIR / "yolov5s.pt"), name)
 
 class Detector:
 
@@ -37,9 +47,10 @@ class Detector:
         """
         loads model given the path
         """
-        #self.model = torch.hub.load(self.model_path, self.name)
-        self.model = torch.hub.load("yolov5-master", 'custom', path=self.model_path, source='local')
-        #self.model = torch.load(self.model_path)
+        # self.model = torch.hub.load(self.model_path, self.name)
+        model_dir = str(_PARENT_DIR / "yolov5-master")
+        self.model = torch.hub.load(model_dir, 'custom', path=self.model_path, source='local')
+        # self.model = torch.load(self.model_path)
 
     def detect(self, timestamp, classes, confidence, video_loader: VideoLoader):
         self.model.conf = confidence
