@@ -4,13 +4,13 @@ import os
 class VideoLoader:
     
     def __init__(self, 
-                 vid_data_path,
-                 frame_write_path):
+                 vid_data_path):
         """
             vid_data_path (str): path to video data object
             frame_write_path (str): path to write our returned frames
         """
         self.vid_data_path = vid_data_path
+        self.cap = cv2.VideoCapture(self.vid_data_path)
         
         
     def getSingleFrame(self, frame_num, write_to_disk=False):
@@ -25,13 +25,12 @@ class VideoLoader:
             _type_: numpy array representing the 
         """
         
-        #total_frames = self.getFrameCount()
-        cap = cv2.VideoCapture(self.vid_data_path) #open video capture object - this is EXPENSIVE!
+        #total_frames = self.getFrameCount() #open video capture object - this is EXPENSIVE!
         
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num) #set reader to appropriate frame number
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num) #set reader to appropriate frame number
 
         #Read the next frame from the video.
-        ret, frame = cap.read() #ret is true or false depending on whether cap read anything
+        ret, frame = self.cap.read() #ret is true or false depending on whether cap read anything
 
         if ret:
             #Set grayscale colorspace or RGB for the frame. 
@@ -43,8 +42,8 @@ class VideoLoader:
                 self.writeJPGToDisk(frame_num, color)
 
         # When everything done, release the capture
-        cap.release()
-        cv2.destroyAllWindows()
+        # cap.release()
+        # cv2.destroyAllWindows()
         return color
     
     
