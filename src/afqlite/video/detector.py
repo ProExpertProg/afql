@@ -7,13 +7,12 @@ from loader import VideoLoader
 import torchvision.models as models
 
 # xmin, ymin, xmax, ymax, confidence, class, timestamp, classifier_hash
-#DetectionTuple = tuple[float, float, float, float, float, int, int, str] #<- confused by this line
-# from typing import NewType
-# DetectionTuple = NewType('DetectionTuple', [float, float, float, float, float, int, int, str])
+DetectionTuple = tuple[float, float, float, float, float, int, int, str]
+
 
 class Detector:
-    
-    def __init__(self, 
+
+    def __init__(self,
                  model_path,
                  name):
         """
@@ -25,39 +24,37 @@ class Detector:
         self.model_path = model_path
         self.name = name
         self.model = None
-        self.classifer_hash = None #?
-        
+        self.classifer_hash = None  # ?
+
         self.load()
-    
+
     def load(self):
         """
         loads model given the path
         """
         self.model = torch.hub.load(self.model_path, self.name)
-        #self.model = torch.load(self.model_path)
-        
-        
-    def detect(self, timestamp, classes, confidence, vid_data_path):
+        # self.model = torch.load(self.model_path)
+
+    def detect(self, timestamp, classes, confidence, video_loader: VideoLoader):
         self.model.conf = confidence
         self.model.classes = classes
-        
-        vid_loader = VideoLoader(vid_data_path, 'myFrame')
-        img = vid_loader.getSingleFrame(timestamp, False)
+
+        img = video_loader.getSingleFrame(timestamp, False)
         return self.getResultFromImg(img, timestamp)
-        
+
     def getResultFromImg(self, img, timestamp):
         """
         img: jpg? file
         Returns: xmin, ymin, xmax,ymax,confidence,class, timestamp, classifier hash, Instance_id?
         """
         result = self.model(img)
-        #result.show()
-        temp = result.pandas().xyxy[0] #convert from YOLOOutput class to pandas dataframe
-        temp = temp.drop(columns=['name']) #name is redundant with class integer
-        temp["timestamp"] = [timestamp for _ in range(len(temp))] #concat timestamp
-        temp["classifier"] = self.name #concat classifier
-        return DetectionTuple(temp.values.tolist()) #return as a Python list
-    
+        # result.show()
+        temp = result.pandas().xyxy[0]  # convert from YOLOOutput class to pandas dataframe
+        temp = temp.drop(columns=['name'])  # name is redundant with class integer
+        temp["timestamp"] = [timestamp for _ in range(len(temp))]  # concat timestamp
+        temp["classifier"] = self.name  # concat classifier
+        return DetectionTuple(temp.values.tolist())  # return as a Python list
+
     def getDataFrameFromBatch(self,
                               frame_start,
                               frame_end,
@@ -66,16 +63,16 @@ class Detector:
                               confidence,
                               vid_data_path):
         all_values = []
-        
+
         for i in range(frame_start, frame_end, frame_jump):
             res = self.detect(i, classes, confidence, vid_data_path)
             all_values.extend(res)
         df_to_ret = pandas.DataFrame(all_values)
-        df_to_ret.columns = ["xmin","ymin","xmax","ymax", "confidence","class","name","timestamp"]
+        df_to_ret.columns = ["xmin", "ymin", "xmax", "ymax", "confidence", "class", "name", "timestamp"]
         return df_to_ret
-    
+
+
 if __name__ == "__main__":
-    
     # #dtc = Detector('ultralytics/yolov5', 'pexels-blue-bird-7189538.mp4', None, 'yolov5s')
     # dtc = Detector('ultralytics/yolov5', 'yolov5s')
 
@@ -83,20 +80,14 @@ if __name__ == "__main__":
     #     base = "runs"
     #     ans = dtc.detect(i, [0, 16], 0.7, 'pexels-blue-bird-7189538.mp4')
     #     print(type(ans))
-        
+
     # print('made it here')
 
     # # vc = VideoCreator()
     # # vc.mergeFramesIntoVid("runs/detect/", "testVid.avi")
     df = pandas.read_pickle("testy_test.pkl")
     print(df.head())
-    
-    #test that detect works
-    #implement a cli command for loading a detector
-    #write a skeleton for paper
 
-
-
-    
-    
-        
+    # test that detect works
+    # implement a cli command for loading a detector
+    # write a skeleton for paper

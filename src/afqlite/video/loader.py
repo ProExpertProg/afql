@@ -1,7 +1,7 @@
 import cv2
 import os
 
-class VideoLoader():
+class VideoLoader:
     
     def __init__(self, 
                  vid_data_path,
@@ -41,7 +41,7 @@ class VideoLoader():
 
             if write_to_disk:
                 #Cut the video extension to have the name of the video
-                my_video_name = self.vid_data_path.split(".")[0]
+                my_video_name = self.vid_data_path.split(".")[-2]
                 frame_path = my_video_name+'_frame_'+str(frame_num)+'.jpg'
                 self.writeJPGToDisk(frame_path, color)
 

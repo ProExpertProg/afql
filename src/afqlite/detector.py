@@ -2,14 +2,15 @@ from typing import Sequence
 
 from afqlite.cache import Cache
 from afqlite.video.detector import Detector, DetectionTuple
+from afqlite.video.loader import VideoLoader
 
 
 class CachedDetector:
-    def __init__(self, cache: Cache, detector: Detector, classes: Sequence[int], confidence, video_path: str):
+    def __init__(self, cache: Cache, detector: Detector, classes: Sequence[int], confidence, video_loader: VideoLoader):
         self.cache = cache
         self.detector = detector
         self.confidence = confidence
-        self.video_path = video_path
+        self.video_loader = video_loader
         self.classes = set(classes)
 
     def detect(self, timestamp: int, cls: int) -> list[DetectionTuple]:
@@ -25,7 +26,7 @@ class CachedDetector:
             # or a proper list of tuples
             return detections
 
-        raw_detections = self.detector.detect(timestamp, self.classes, self.confidence, self.video_path) #videoloader
+        raw_detections = self.detector.detect(timestamp, self.classes, self.confidence, self.video_loader)
         detections_by_class = self.partition_by_class(raw_detections)
 
         # store all detections in the cache

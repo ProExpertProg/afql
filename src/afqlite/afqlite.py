@@ -3,6 +3,7 @@ from typing import Union
 
 from afqlite.cache import Cache, DetectionStore
 from afqlite.video.detector import Detector, DetectionTuple
+from afqlite.video.loader import VideoLoader
 
 BUILTIN_LIGHT = "__builtin_lightweight__"
 BUILTIN_HEAVY = "__builtin_heavyweight__"
@@ -26,14 +27,14 @@ class DetectorAlreadyExists(Exception):
 
 class AFQLite:
     def __init__(self):
-        # keyed by name, contains video path
-        self.datasets: dict[str, str] = {}
+        # keyed by name, contains video loader
+        self.datasets: dict[str, VideoLoader] = {}
 
         # keyed by detector name
         self.detectors: dict[str, Detector] = {
             # TODO
             BUILTIN_LIGHT: None,
-            BUILTIN_HEAVY: Detector("ultralytics/yolov5", "builtin_heavy"),
+            BUILTIN_HEAVY: Detector("ultralytics/yolov5", BUILTIN_HEAVY),
         }
 
         # keyed by dataset and detector hash
@@ -71,13 +72,11 @@ class AFQLite:
         with open(path, "rb") as handle:
             self.import_cache(dataset, detector, pickle.load(handle))
 
-    def load_video(self, dataset: str, video_path: str, cache_path: Union[str, None]):
+    def load_video(self, dataset: str, video_path: str, cache_path: str = None):
         if dataset in self.datasets:
             raise DatasetAlreadyExists
 
-        self.datasets[dataset] = video_path
-
-        # TODO create VideoLoader
+        self.datasets[dataset] = VideoLoader(video_path)
 
         # create a new cache for each existing detector
         for detector in self.detectors:
@@ -95,7 +94,7 @@ class AFQLite:
         if name in self.detectors:
             raise DetectorAlreadyExists
 
-        self.detectors[name] = Detector(model_path, name) # TODO , model_hash)
+        self.detectors[name] = Detector(model_path, name)  # TODO , model_hash)
 
         # create a new cache for each existing dataset
         for dataset in self.datasets:
