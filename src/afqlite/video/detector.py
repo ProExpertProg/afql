@@ -1,14 +1,19 @@
 import torch
 import pandas
-# from afqlite.video.loader import VideoLoader
-# from afqlite.video.utils import *
-# from afqlite.video.quantizer import KMeansQuantizer
-from loader import VideoLoader
+from afqlite.video.loader import VideoLoader
+
 import torchvision.models as models
 
 # xmin, ymin, xmax, ymax, confidence, class, timestamp, classifier_hash
 DetectionTuple = tuple[float, float, float, float, float, int, int, str]
+DETECTION_TUPLE_LEN = 8
 
+INDEX_TO_COLUMN = ['xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class', 'timestamp', 'classifier']
+NUM_COLUMNS = len(INDEX_TO_COLUMN)
+
+COLUMN_TO_INDEX = {
+    column: i for i, column in enumerate(INDEX_TO_COLUMN)
+}
 
 class Detector:
 

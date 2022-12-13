@@ -1,6 +1,6 @@
 from typing import Iterator, Union
 
-from afqlite.video.detector import DetectionTuple
+from afqlite.video.detector import DetectionTuple, COLUMN_TO_INDEX
 
 # class, timestamp
 Key = tuple[int, int]
@@ -49,8 +49,17 @@ class Cache:
         # cache miss
         return [], False
 
-    def merge(self, cached_data: DetectionStore):
+    def merge(self, cached_data: Union[DetectionStore, list[DetectionTuple]]):
         """
         Items in cached_data take precedence over existing items (any data that already exists will be replaced).
         """
+        # handle a list of detections passed in
+        if isinstance(cached_data, list):
+            data_dict : DetectionStore = {}
+            for detection in cached_data:
+                key = (detection[COLUMN_TO_INDEX['class']], detection[COLUMN_TO_INDEX['timestamp']])
+                data_dict[key] = data_dict.get(key, []) + [detection]
+            cached_data = data_dict
+
+        assert isinstance(cached_data, dict)
         self.detections |= cached_data

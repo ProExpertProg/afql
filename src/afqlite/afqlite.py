@@ -1,8 +1,10 @@
+import itertools
+import pandas
 import pickle
 from typing import Union
 
 from afqlite.cache import Cache, DetectionStore
-from afqlite.video.detector import Detector, DetectionTuple
+from afqlite.video.detector import Detector, DetectionTuple, DETECTION_TUPLE_LEN, INDEX_TO_COLUMN
 from afqlite.video.loader import VideoLoader
 
 BUILTIN_LIGHT = "__builtin_lightweight__"
@@ -25,6 +27,14 @@ class DetectorAlreadyExists(Exception):
     pass
 
 
+class UnsupportedExtension(Exception):
+    pass
+
+
+class InvalidDataError(Exception):
+    pass
+
+
 class AFQLite:
     def __init__(self):
         # keyed by name, contains video loader
@@ -42,7 +52,7 @@ class AFQLite:
 
         print("AFQLite initialized")
 
-    def import_cache(self, dataset: str, detector: str, cached_data: DetectionStore):
+    def import_cache(self, dataset: str, detector: str, cached_data: Union[DetectionStore, list[DetectionTuple]]):
         # cached_data will replace existing data for any overlapping keys
         # TODO maybe check that the classifier hash matches?
         self._find_cache(dataset, detector).merge(cached_data)
@@ -65,12 +75,30 @@ class AFQLite:
     # TODO maybe add support for other file types
     def write_cache_to_file(self, dataset: str, detector: str, path: str):
         data = self.export_cache(dataset, detector)
-        with open(path, "wb") as handle:
-            pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        ext = path.split(".")[-1]
+        if ext == "pickle":
+            with open(path, "wb") as handle:
+                pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        elif ext == "csv":
+            values = list(itertools.chain.from_iterable(data.values()))
+            df = pandas.DataFrame(values, columns=INDEX_TO_COLUMN)
+            df.to_csv(path, index=False)
+        else:
+            raise UnsupportedExtension
 
     def import_cache_from_file(self, dataset: str, detector: str, path: str):
-        with open(path, "rb") as handle:
-            self.import_cache(dataset, detector, pickle.load(handle))
+        ext = path.split(".")[-1]
+        if ext == "pickle":
+            with open(path, "rb") as handle:
+                self.import_cache(dataset, detector, pickle.load(handle))
+        elif ext == "csv":
+            df = pandas.read_csv(path)
+            detections = df.values.tolist()
+            if len(detections[0]) != DETECTION_TUPLE_LEN:
+                raise InvalidDataError
+            self.import_cache(dataset, detector, detections)
+        else:
+            raise UnsupportedExtension
 
     def load_video(self, dataset: str, video_path: str, cache_path: str = None):
         if dataset in self.datasets:

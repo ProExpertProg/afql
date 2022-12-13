@@ -1,7 +1,7 @@
 from typing import Sequence
 
 from afqlite.cache import Cache
-from afqlite.video.detector import Detector, DetectionTuple
+from afqlite.video.detector import Detector, DetectionTuple, COLUMN_TO_INDEX
 from afqlite.video.loader import VideoLoader
 
 
@@ -39,11 +39,11 @@ class CachedDetector:
 
         return detections
 
-    def partition_by_class(self, raw_detections) -> dict[int, list[DetectionTuple]]:
+    def partition_by_class(self, raw_detections: list[DetectionTuple]) -> dict[int, list[DetectionTuple]]:
         # partition by class
         detections: dict[int, list[DetectionTuple]] = {}
         for raw in raw_detections:
-            raw_cls = raw[5]  # TODO magic number
+            raw_cls = raw[COLUMN_TO_INDEX['class']]
             detections[raw_cls] = detections.get(raw_cls, default=[]) + [raw]
 
         # only detected classes that were given
