@@ -11,7 +11,6 @@ class VideoLoader:
             frame_write_path (str): path to write our returned frames
         """
         self.vid_data_path = vid_data_path
-        self.frame_write_path = frame_write_path
         
         
     def getSingleFrame(self, frame_num, write_to_disk=False):
@@ -41,54 +40,19 @@ class VideoLoader:
 
             if write_to_disk:
                 #Cut the video extension to have the name of the video
-                my_video_name = self.vid_data_path.split(".")[-2]
-                frame_path = my_video_name+'_frame_'+str(frame_num)+'.jpg'
-                self.writeJPGToDisk(frame_path, color)
+                self.writeJPGToDisk(frame_num, color)
 
         # When everything done, release the capture
         cap.release()
         cv2.destroyAllWindows()
         return color
-        
-        
-        
-    def getFrameSeq(self, start_time, end_time, frame_skip):
-        """
-            Extracts a sequence of frames bounded by start to end time
-            start_time (int): time at which to start extracting frames
-            end_time (int): time at which to end extraction of frames
-            frame_rate (int): how many frames (jpgs) we want to generate from video. 
-        """
-        cap = cv2.VideoCapture(self.vid_data_path)
-        i = 0
-        # a variable to keep track of the frame to be saved
-        frame_count = 0
-        while cap.isOpened():
-          if frame_count%100==0: print('frame_count: ', frame_count)
-          if i > frame_skip - 1 and frame_count >= start_time and frame_count <= end_time:
-            i = 0
-            frame_count += 1
-
-            ret, frame = cap.read()
-            if not ret:
-                break
-            #print('frame_count: ', frame_count)
-            cv2.imwrite(self.frame_write_path+str(frame_count)+'.jpg', frame)
-            
-          elif frame_count > end_time:
-            break
-          else:
-            i += 1
-            frame_count += 1
-        return
     
     
-    def writeNumpyArraysToDisk(self, path, numpy_arrays):
-        pass
-    
-    def writeJPGToDisk(self, path, numpy_array):
-        if not os.path.exists(path):
-            cv2.imwrite(path,numpy_array)
+    def writeJPGToDisk(self, frame_num, numpy_array):
+        my_video_name = self.vid_data_path.split(".")[0]
+        frame_path = my_video_name+'_frame_'+str(frame_num)+'.jpg'
+        if not os.path.exists(frame_path):
+            cv2.imwrite(frame_path,numpy_array)
 
 
     def getFrameCount(self):
