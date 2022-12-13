@@ -14,39 +14,41 @@ class VideoLoader():
         self.frame_write_path = frame_write_path
         
         
-    def getSingleFrame(self, frame_num):
-        
-        print('entered')
-        #frame_no = (frame_num /(self.time_length*self.fps))
-        total_frames = self.getFrameCount()
-        print('total frames: ', total_frames)
-        frame_no = frame_num / self.getFrameCount()
-        cap = cv2.VideoCapture(self.vid_data_path)
-        print(cap.isOpened())
+    def getSingleFrame(self, frame_num, write_to_disk):
+        """Returns a numpy array representing the frame in a video
+        specified by frame_num.
 
-        #print(cap.set(2,frame_no))
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+        Args:
+            frame_num (int): the frame of interest between 1 and number of frames in the video
+            write_to_disk (boolean): whether or not to write the resulting numpy array to disk
+
+        Returns:
+            _type_: numpy array representing the 
+        """
+        
+        #total_frames = self.getFrameCount()
+        cap = cv2.VideoCapture(self.vid_data_path) #open video capture object - this is EXPENSIVE!
+        
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num) #set reader to appropriate frame number
 
         #Read the next frame from the video.
-        ret, frame = cap.read()
-        print(type(frame))
+        ret, frame = cap.read() #ret is true or false depending on whether cap read anything
 
-        #Set grayscale colorspace for the frame. 
-        #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        color = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        if ret:
+            #Set grayscale colorspace or RGB for the frame. 
+            #color = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            color = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-        #Cut the video extension to have the name of the video
-        my_video_name = self.vid_data_path.split(".")[0]
-        
-        #Store this frame to an image
-        frame_path = my_video_name+'_frame_'+str(frame_num)+'.jpg'
-        if not os.path.exists(frame_path):
-            cv2.imwrite(frame_path,color)
+            if write_to_disk:
+                #Cut the video extension to have the name of the video
+                my_video_name = self.vid_data_path.split(".")[0]
+                frame_path = my_video_name+'_frame_'+str(frame_num)+'.jpg'
+                self.writeJPGToDisk(frame_path, color)
 
         # When everything done, release the capture
         cap.release()
         cv2.destroyAllWindows()
-        return frame_path
+        return color
         
         
         
@@ -62,16 +64,31 @@ class VideoLoader():
         # a variable to keep track of the frame to be saved
         frame_count = 0
         while cap.isOpened():
+          if frame_count%100==0: print('frame_count: ', frame_count)
+          if i > frame_skip - 1 and frame_count >= start_time and frame_count <= end_time:
+            i = 0
+            frame_count += 1
+
             ret, frame = cap.read()
             if not ret:
                 break
-            if i > frame_skip - 1:
-                frame_count += 1
-                cv2.imwrite(self.frame_write_path+str(frame_count*frame_skip)+'.jpg', frame)
-                i = 0
-                continue
+            #print('frame_count: ', frame_count)
+            cv2.imwrite(self.frame_write_path+str(frame_count)+'.jpg', frame)
+            
+          elif frame_count > end_time:
+            break
+          else:
             i += 1
+            frame_count += 1
         return
+    
+    
+    def writeNumpyArraysToDisk(self, path, numpy_arrays):
+        pass
+    
+    def writeJPGToDisk(self, path, numpy_array):
+        if not os.path.exists(path):
+            cv2.imwrite(path,numpy_array)
 
 
     def getFrameCount(self):

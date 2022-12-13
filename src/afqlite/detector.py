@@ -25,7 +25,7 @@ class CachedDetector:
             # or a proper list of tuples
             return detections
 
-        raw_detections = self.detector.detect(timestamp, self.classes, self.confidence, self.video_path)
+        raw_detections = self.detector.detect(timestamp, self.classes, self.confidence, self.video_path) #videoloader
         detections_by_class = self.partition_by_class(raw_detections)
 
         # store all detections in the cache

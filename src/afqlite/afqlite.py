@@ -33,7 +33,7 @@ class AFQLite:
         self.detectors: dict[str, Detector] = {
             # TODO
             BUILTIN_LIGHT: None,
-            BUILTIN_HEAVY: None,
+            BUILTIN_HEAVY: Detector("ultralytics/yolov5", "builtin_heavy"),
         }
 
         # keyed by dataset and detector hash

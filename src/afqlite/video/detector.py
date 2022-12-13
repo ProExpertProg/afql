@@ -1,12 +1,15 @@
 import torch
 import pandas
-from afqlite.video.loader import VideoLoader
-from afqlite.video.utils import *
-from afqlite.video.quantizer import KMeansQuantizer
+# from afqlite.video.loader import VideoLoader
+# from afqlite.video.utils import *
+# from afqlite.video.quantizer import KMeansQuantizer
+from loader import VideoLoader
 import torchvision.models as models
 
-# xmin, ymin, xmax, ymax, confidence, class, timestamp, classifier hash
-DetectionTuple = tuple[float, float, float, float, float, int, int, str]
+# xmin, ymin, xmax, ymax, confidence, class, timestamp, classifier_hash
+DetectionTuple = tuple[float, float, float, float, float, int, int, str] #<- confused by this line
+# from typing import NewType
+# DetectionTuple = NewType('DetectionTuple', [float, float, float, float, float, int, int, str])
 
 class Detector:
     
@@ -33,21 +36,13 @@ class Detector:
         self.model = torch.hub.load(self.model_path, self.name)
         #self.model = torch.load(self.model_path)
         
-        full_model_size = get_model_size(self.model, 32)
-        print(f"    {32}-bit k-means quantized model has size={full_model_size/MiB:.2f} MiB")
-        
-        bitwidth = 8
-        quantizer = KMeansQuantizer(self.model, 8)
-        quantized_model_size = get_model_size(self.model, bitwidth)
-        print(f"    {bitwidth}-bit k-means quantized model has size={quantized_model_size/MiB:.2f} MiB")
-        #prune(self.model, 0.3)
         
     def detect(self, timestamp, classes, confidence, vid_data_path):
         self.model.conf = confidence
         self.model.classes = classes
         
         vid_loader = VideoLoader(vid_data_path, 'myFrame')
-        img = vid_loader.getSingleFrame(timestamp)
+        img = vid_loader.getSingleFrame(timestamp, False)
         return self.getResultFromImg(img, timestamp)
         
     def getResultFromImg(self, img, timestamp):
@@ -56,10 +51,12 @@ class Detector:
         Returns: xmin, ymin, xmax,ymax,confidence,class, timestamp, classifier hash, Instance_id?
         """
         result = self.model(img)
-        result.show()
-        temp = result.pandas().xyxy[0]
-        temp["timestamp"] = [timestamp for _ in range(len(temp))]
-        return temp.values.tolist()
+        #result.show()
+        temp = result.pandas().xyxy[0] #convert from YOLOOutput class to pandas dataframe
+        temp = temp.drop(columns=['name']) #name is redundant with class integer
+        temp["timestamp"] = [timestamp for _ in range(len(temp))] #concat timestamp
+        temp["classifier"] = self.name #concat classifier
+        return DetectionTuple(temp.values.tolist()) #return as a Python list
     
     def getDataFrameFromBatch(self,
                               frame_start,
@@ -84,7 +81,8 @@ if __name__ == "__main__":
 
     for i in range(0, 36, 12):
         base = "runs"
-        dtc.detect(i, [0, 16], 0.7, 'pexels-blue-bird-7189538.mp4')
+        ans = dtc.detect(i, [0, 16], 0.7, 'pexels-blue-bird-7189538.mp4')
+        print(type(ans))
         
     print('made it here')
 
