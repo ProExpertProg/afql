@@ -20,7 +20,7 @@ class Cache:
             if other is not None and key in other.detections:
                 yield from other.detections[key]
             else:
-                yield self.detections[key]
+                yield from self.detections[key]
 
     def store(self, timestamp: int, cls: int, detections: list[DetectionTuple] = None):
         """
@@ -58,7 +58,7 @@ class Cache:
             data_dict : DetectionStore = {}
             for detection in cached_data:
                 key = (detection[COLUMN_TO_INDEX['class']], detection[COLUMN_TO_INDEX['timestamp']])
-                data_dict[key] = data_dict.get(key, []) + [detection]
+                data_dict[key] = data_dict.get(key, []) + [DetectionTuple(detection)]
             cached_data = data_dict
 
         assert isinstance(cached_data, dict)

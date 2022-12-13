@@ -76,6 +76,9 @@ class AFQLite:
         assert cache_key in self.caches
         return self.caches[(dataset, detector)]
 
+    def _builtin_caches(self, dataset: str) -> tuple[Cache, Cache]:
+        return self._find_cache(dataset, BUILTIN_LIGHT), self._find_cache(dataset, BUILTIN_HEAVY)
+
     # TODO maybe add support for other file types
     def write_cache_to_file(self, dataset: str, detector: str, path: str):
         data = self.export_cache(dataset, detector)

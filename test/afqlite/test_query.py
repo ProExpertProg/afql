@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import Mock, MagicMock
 
+from afqlite.classes import CLASS_TO_INDEX
 from afqlite.operators import Filter, DetectorFilter, Join, Scan
 from afqlite.predicates import Column, Constant, Compare, And
-
-from afqlite.classes import INDEX_TO_CLASS, CLASS_TO_INDEX, COLUMN_TO_INDEX, NUM_COLUMNS
+from afqlite.video.detector import COLUMN_TO_INDEX, NUM_COLUMNS
 
 
 class TestQueries(unittest.TestCase):
