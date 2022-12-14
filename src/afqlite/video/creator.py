@@ -46,11 +46,11 @@ class VideoCreator():
         #merge into video object
         for frame in seen_frames:
             stacked_tensor = torch.cat(frame_boxes[frame])
-            tnsr = draw_bounding_boxes(seen_frames[frame], stacked_tensor,  fill=True, width=5)
+            tnsr = draw_bounding_boxes(seen_frames[frame], stacked_tensor,  colors=["green" for _ in range(stacked_tensor.shape[0])], fill=True, width=5)
             tnsr = tnsr.permute(1, 2, 0).numpy().astype(np.float32)
             ret = cv2.imwrite(image_store+str(frame)+".png", tnsr) #tnsr.reshape(tnsr.shape[1], tnsr.shape[2], tnsr.shape[0])
         
-        self.mergeFramesIntoVid(image_store, "demo.avi", 1)
+        self.mergeFramesIntoVid(image_store, image_store+"demo.avi", 1)
 
     def mergeFramesIntoVid(self, dir_path, video_name, fps):
         """merge the frames into a video file and write the video file

@@ -89,9 +89,9 @@ class TestIntegration(unittest.TestCase):
         self.assertTrue(all(230 < t[COLUMN_TO_INDEX['timestamp']] < 236 for t in results))
         self.assertTrue(
             all(t[COLUMN_TO_INDEX['timestamp']] == t[COLUMN_TO_INDEX['timestamp'] + NUM_COLUMNS] for t in results))
-        self.getVideo(results)
+        self.getVideo(results, path="res_img/zebra_giraffe/")
         
-    def getVideo(self, results):
+    def getVideo(self, results, path="res_img"):
         vc = VideoCreator()
         ls_of_ls = []
         for i in range(len(results)):
@@ -100,6 +100,6 @@ class TestIntegration(unittest.TestCase):
         
         df = pd.DataFrame(ls_of_ls, columns=["xmin", "ymin", "xmax", "ymax", "confidence", "class", "timestamp", "classifier"])
         print(df.head())
-        vc.createAnnotatedVid([df], self.video_path, "res_img/")
+        vc.createAnnotatedVid([df], self.video_path, path)
 if __name__ == '__main__':
     unittest.main()
