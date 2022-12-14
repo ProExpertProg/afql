@@ -18,6 +18,14 @@ class Operator(ABC):
     def tupledesc(self) -> TupleDesc:
         pass
 
+    @abstractmethod
+    def explain(self, level: int = 0) -> str:
+        pass
+
+    @staticmethod
+    def indent(level: int) -> str:
+        return " " * 4 * level
+
 
 class Scan(Operator):
     def __init__(self, low_precision: Cache, high_precision: Cache, table: str):
@@ -38,6 +46,9 @@ class Scan(Operator):
             ('classifier', 'str')
         ]
 
+    def explain(self, level: int = 0) -> str:
+        return self.indent(level) + "Scan(table=%s)\n" % (self.table,)
+
 
 class Join(Operator):
     def __init__(self, alias1: str, alias2: str, sub_operator1: Operator, sub_operator2: Operator):
@@ -57,6 +68,10 @@ class Join(Operator):
         td2 = td_add_alias(self.alias2, self.sub_operator2.tupledesc())
         return td1 + td2
 
+    def explain(self, level: int = 0) -> str:
+        return self.indent(level) + "Join(alias=[%s,%s])\n" % (self.alias1, self.alias2) \
+            + self.sub_operator1.explain(level + 1) + self.sub_operator2.explain(level + 1)
+
 
 class Filter(Operator):
     def __init__(self, predicate: Predicate, sub_operator: Operator):
@@ -70,6 +85,10 @@ class Filter(Operator):
 
     def tupledesc(self) -> TupleDesc:
         return self.sub_operator.tupledesc()
+
+    def explain(self, level: int = 0) -> str:
+        return self.indent(level) + "Filter(%s)\n" % (self.predicate.explain(self.tupledesc()),) \
+            + self.sub_operator.explain(level + 1)
 
 
 class DetectorFilter(Operator):
@@ -101,6 +120,10 @@ class DetectorFilter(Operator):
     @cache
     def tupledesc(self) -> TupleDesc:
         return self.sub_operator.tupledesc()
+
+    def explain(self, level: int = 0) -> str:
+        return self.indent(level) + "DetectorFilter(class=%s, confidence=%s)\n" % (self.cls, self.confidence) \
+            + self.sub_operator.explain(level + 1)
 
     def group_by_timestamp(self) -> Iterator[list[Tuple]]:
         last_timestamp, tuples = None, []

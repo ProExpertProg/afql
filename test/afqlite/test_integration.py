@@ -77,6 +77,7 @@ class TestIntegration(unittest.TestCase):
                        )
 
         # check just the join first
+        print(query.explain())
         join_results = list(join.run())
 
         results = list(query.run())
