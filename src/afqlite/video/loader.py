@@ -9,6 +9,8 @@ class VideoLoader:
             vid_data_path (str): path to video data object
             frame_write_path (str): path to write our returned frames
         """
+        if not os.path.exists(vid_data_path):
+            print('ahaaaa')
         self.vid_data_path = vid_data_path
         self.cap = cv2.VideoCapture(self.vid_data_path)
         
@@ -25,7 +27,7 @@ class VideoLoader:
             _type_: numpy array representing the 
         """
         
-        #total_frames = self.getFrameCount() #open video capture object - this is EXPENSIVE!
+        total_frames = self.getFrameCount() #open video capture object - this is EXPENSIVE!
         
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num) #set reader to appropriate frame number
 

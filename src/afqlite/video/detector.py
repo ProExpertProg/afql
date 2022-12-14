@@ -48,7 +48,7 @@ class Detector:
         loads model given the path
         """
         # self.model = torch.hub.load(self.model_path, self.name)
-        model_dir = str(_PARENT_DIR / "yolov5-master")
+        model_dir = str(_PARENT_DIR / "yolov5_master")
         self.model = torch.hub.load(model_dir, 'custom', path=self.model_path, source='local')
         # self.model = torch.load(self.model_path)
 
