@@ -13,13 +13,13 @@ class VideoLoader:
         self.cap = cv2.VideoCapture(self.vid_data_path)
         
         
-    def getSingleFrame(self, frame_num, write_to_disk=False):
+    def getSingleFrame(self, frame_num, write_to_disk=None):
         """Returns a numpy array representing the frame in a video
         specified by frame_num.
 
         Args:
             frame_num (int): the frame of interest between 1 and number of frames in the video
-            write_to_disk (boolean): whether or not to write the resulting numpy array to disk
+            write_to_disk (boolean): the path to write image to disk. If None (the default) won't write image
 
         Returns:
             _type_: numpy array representing the 
@@ -39,7 +39,7 @@ class VideoLoader:
 
             if write_to_disk:
                 #Cut the video extension to have the name of the video
-                self.writeJPGToDisk(frame_num, color)
+                self.writeJPGToDisk(frame_num, color, write_to_disk)
 
         # When everything done, release the capture
         # cap.release()
@@ -47,9 +47,9 @@ class VideoLoader:
         return color
     
     
-    def writeJPGToDisk(self, frame_num, numpy_array):
+    def writeJPGToDisk(self, frame_num, numpy_array, write_path):
         my_video_name = self.vid_data_path.split(".")[0]
-        frame_path = my_video_name+'_frame_'+str(frame_num)+'.jpg'
+        frame_path = write_path+'_frame_'+str(frame_num)+'.jpg'
         if not os.path.exists(frame_path):
             cv2.imwrite(frame_path,numpy_array)
 
