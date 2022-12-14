@@ -1,10 +1,11 @@
+import argparse
 import re
 import sys
 
 from afqlite.afqlite import AFQLite
 from prompt_toolkit import PromptSession
 
-from cli.commands import COMMAND_PREFIX, commands
+from cli.commands import COMMAND_PREFIX, commands, CommandError
 
 if __name__ == '__main__':
     print("AFQLite CLI Version 0.0.1")
@@ -36,8 +37,10 @@ if __name__ == '__main__':
             # handle query
             # TODO
 
+        except CommandError:
+            pass
         except KeyboardInterrupt:
-            print("Ope! try again")
+            print("To exit, use .exit or Ctrl-D")
         except EOFError:
             print("Good day")
             break
