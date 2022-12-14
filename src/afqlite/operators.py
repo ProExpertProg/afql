@@ -98,8 +98,9 @@ class DetectorFilter(Operator):
             detections = self.detector.detect(timestamp, self.cls)
             yield from self.match_and_replace(tuples, detections)
 
+    @cache
     def tupledesc(self) -> TupleDesc:
-        pass
+        return self.sub_operator.tupledesc()
 
     def group_by_timestamp(self) -> Iterator[list[Tuple]]:
         last_timestamp, tuples = None, []
