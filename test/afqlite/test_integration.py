@@ -10,6 +10,8 @@ from afqlite.predicates import Column, Constant, Compare, And
 
 from afqlite.classes import INDEX_TO_CLASS, CLASS_TO_INDEX
 from afqlite.video.detector import COLUMN_TO_INDEX, NUM_COLUMNS
+from afqlite.video.creator import VideoCreator
+import pandas as pd
 
 ZEBRA = CLASS_TO_INDEX['zebra']
 GIRAFFE = CLASS_TO_INDEX['giraffe']
@@ -54,6 +56,7 @@ class TestIntegration(unittest.TestCase):
         results = list(query.run())
         results_higher = list(query_higher.run())
         self.assertGreater(len(results), len(results_higher))
+        #self.getVideo(results)
 
     def test_query2(self):
         join = Join("giraffes", "zebras",
@@ -86,6 +89,17 @@ class TestIntegration(unittest.TestCase):
         self.assertTrue(all(230 < t[COLUMN_TO_INDEX['timestamp']] < 236 for t in results))
         self.assertTrue(
             all(t[COLUMN_TO_INDEX['timestamp']] == t[COLUMN_TO_INDEX['timestamp'] + NUM_COLUMNS] for t in results))
-
-        if __name__ == '__main__':
-            unittest.main()
+        #self.getVideo(results)
+        
+    def getVideo(self, results):
+        vc = VideoCreator()
+        ls_of_ls = []
+        for i in range(len(results)):
+            for j in range(0, len(results[i].values),8):
+                ls_of_ls.append(results[i].values[j:j+8])
+        
+        df = pd.DataFrame(ls_of_ls, columns=["xmin", "ymin", "xmax", "ymax", "confidence", "class", "timestamp", "classifier"])
+        print(df.head())
+        vc.createAnnotatedVid([df], self.video_path, "res_img/")
+if __name__ == '__main__':
+    unittest.main()

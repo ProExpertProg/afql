@@ -43,12 +43,12 @@ class TestIntegration(unittest.TestCase):
     #     self.assertGreater(len(results), 10)
 
     def query1(self, confidence):
-        return DetectorFilter(COLUMN_TO_INDEX['timestamp'], COLUMN_TO_INDEX['confidence'], GIRAFFE,
+        return DetectorFilter(COLUMN_TO_INDEX['timestamp'], COLUMN_TO_INDEX['confidence'], PERSON,
                               confidence,
-                              CachedDetector(self.heavy_cache, self.heavy, [GIRAFFE], confidence, self.video_loader),
+                              CachedDetector(self.heavy_cache, self.heavy, [PERSON], confidence, self.video_loader),
                               Filter(
-                                  Compare("==", Column(COLUMN_TO_INDEX['class']), Constant(GIRAFFE)),
-                                  Scan(self.light_cache, self.heavy_cache, "zebra"))
+                                  Compare("==", Column(COLUMN_TO_INDEX['class']), Constant(PERSON)),
+                                  Scan(self.light_cache, self.heavy_cache, "person"))
                               )
 
     def test_query1(self):
@@ -59,36 +59,36 @@ class TestIntegration(unittest.TestCase):
         results_higher = list(query_higher.run())
         self.assertGreater(len(results), len(results_higher))
 
-    def test_query2(self):
-        join = Join("giraffes", "zebras",
-                    Filter(Compare("==", Column(COLUMN_TO_INDEX['class']), Constant(GIRAFFE)),
-                           Scan(self.light_cache, self.heavy_cache, "zebra")),
-                    Filter(Compare("==", Column(COLUMN_TO_INDEX['class']), Constant(ZEBRA)),
-                           Scan(self.light_cache, self.heavy_cache, "zebra"))
-                    )
+    # def test_query2(self):
+    #     join = Join("giraffes", "zebras",
+    #                 Filter(Compare("==", Column(COLUMN_TO_INDEX['class']), Constant(GIRAFFE)),
+    #                        Scan(self.light_cache, self.heavy_cache, "zebra")),
+    #                 Filter(Compare("==", Column(COLUMN_TO_INDEX['class']), Constant(ZEBRA)),
+    #                        Scan(self.light_cache, self.heavy_cache, "zebra"))
+    #                 )
 
-        query = DetectorFilter(COLUMN_TO_INDEX['timestamp'] + NUM_COLUMNS, COLUMN_TO_INDEX['confidence'] + NUM_COLUMNS, ZEBRA,
-                       0.9,
-                       CachedDetector(self.heavy_cache, self.heavy, [GIRAFFE, ZEBRA], 0.1, self.video_loader),
-                       Filter(
-                           And(Compare("<", Column(COLUMN_TO_INDEX['xmax'] + NUM_COLUMNS),  # zebra.xmax < giraffe.xmin
-                                       Column(COLUMN_TO_INDEX['xmin'])),
-                               Compare("==", Column(COLUMN_TO_INDEX['timestamp']),
-                                       Column(COLUMN_TO_INDEX['timestamp'] + NUM_COLUMNS)),
-                               ),
-                           join
-                       )
-                       )
+    #     query = DetectorFilter(COLUMN_TO_INDEX['timestamp'] + NUM_COLUMNS, COLUMN_TO_INDEX['confidence'] + NUM_COLUMNS, ZEBRA,
+    #                    0.9,
+    #                    CachedDetector(self.heavy_cache, self.heavy, [GIRAFFE, ZEBRA], 0.1, self.video_loader),
+    #                    Filter(
+    #                        And(Compare("<", Column(COLUMN_TO_INDEX['xmax'] + NUM_COLUMNS),  # zebra.xmax < giraffe.xmin
+    #                                    Column(COLUMN_TO_INDEX['xmin'])),
+    #                            Compare("==", Column(COLUMN_TO_INDEX['timestamp']),
+    #                                    Column(COLUMN_TO_INDEX['timestamp'] + NUM_COLUMNS)),
+    #                            ),
+    #                        join
+    #                    )
+    #                    )
 
-        # check just the join first
-        join_results = list(join.run())
+    #     # check just the join first
+    #     join_results = list(join.run())
 
-        results = list(query.run())
-        # print(format_results(join_results, join.tupledesc()))
-        print(format_results(results, query.tupledesc()))
-        self.assertTrue(all(230 < t[COLUMN_TO_INDEX['timestamp']] < 236 for t in results))
-        self.assertTrue(
-            all(t[COLUMN_TO_INDEX['timestamp']] == t[COLUMN_TO_INDEX['timestamp'] + NUM_COLUMNS] for t in results))
+    #     results = list(query.run())
+    #     # print(format_results(join_results, join.tupledesc()))
+    #     print(format_results(results, query.tupledesc()))
+    #     self.assertTrue(all(230 < t[COLUMN_TO_INDEX['timestamp']] < 236 for t in results))
+    #     self.assertTrue(
+    #         all(t[COLUMN_TO_INDEX['timestamp']] == t[COLUMN_TO_INDEX['timestamp'] + NUM_COLUMNS] for t in results))
 
-        if __name__ == '__main__':
-            unittest.main()
+if __name__ == '__main__':
+    unittest.main()

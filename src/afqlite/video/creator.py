@@ -3,8 +3,8 @@ import os
 from afqlite.video.loader import VideoLoader
 import pandas as pd
 import torch
-from torchvision.utils import draw_bounding_boxes
-from torchvision.transforms import ToTensor
+from torchvision.utils import draw_bounding_boxes, save_image
+from torchvision.transforms import transforms
 import numpy as np
 
 class VideoCreator():
@@ -38,19 +38,19 @@ class VideoCreator():
                     mytensor = torch.tensor(np_im).permute(2, 0, 1)
                     seen_frames[timestamp] = mytensor
                     
-                    frame_boxes[timestamp] = [self.prepareBox(row[["xmin", "ymin", "xmax", "ymax"]].values.tolist(), np_im.shape[2])]
+                    frame_boxes[timestamp] = [self.prepareBox(row[["xmin", "ymin", "xmax", "ymax"]].values.tolist(), np_im.shape)]
                 else:
-                    frame_boxes[timestamp].append(self.prepareBox(row[["xmin", "ymin", "xmax", "ymax"]].values.tolist(), np_im.shape[2]))
+                    frame_boxes[timestamp].append(self.prepareBox(row[["xmin", "ymin", "xmax", "ymax"]].values.tolist(), np_im.shape))
                 
         
         #merge into video object
         for frame in seen_frames:
             stacked_tensor = torch.cat(frame_boxes[frame])
-            boxes_drawn = draw_bounding_boxes(seen_frames[frame], stacked_tensor, colors="green", fill=True, width=5)
-            tnsr = boxes_drawn.permute(1, 2, 0).numpy().astype(np.float32)
+            tnsr = draw_bounding_boxes(seen_frames[frame], stacked_tensor,  fill=True, width=5)
+            tnsr = tnsr.permute(1, 2, 0).numpy().astype(np.float32)
             ret = cv2.imwrite(image_store+str(frame)+".png", tnsr) #tnsr.reshape(tnsr.shape[1], tnsr.shape[2], tnsr.shape[0])
         
-        self.mergeFramesIntoVid(image_store, "demo.avi", 10)
+        self.mergeFramesIntoVid(image_store, "demo.avi", 1)
 
     def mergeFramesIntoVid(self, dir_path, video_name, fps):
         """merge the frames into a video file and write the video file
@@ -85,6 +85,8 @@ class VideoCreator():
         video.release()
         
     def prepareBox(self,ls, border):
+        ls[0] *= border[1]/640
+        ls[2] *= border[1]/640
         ans = torch.tensor(ls).unsqueeze(0)
         #print(type(ans))
         return ans

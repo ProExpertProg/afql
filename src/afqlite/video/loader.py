@@ -26,7 +26,7 @@ class VideoLoader:
         Returns:
             _type_: numpy array representing the 
         """
-        
+        #print('frame num: ', frame_num)
         total_frames = self.getFrameCount() #open video capture object - this is EXPENSIVE!
         
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num) #set reader to appropriate frame number
